@@ -174,24 +174,33 @@
 ;;; Returns Lux reading
 
 (defun vl6180-read-lux (gain)
-  (let (lux)
+  (format t "~%Reading lux~%")
+  (let ((lux 0.0))
     ;; IRQ on ALS ready
+    (format t "~%Settign IRQ~%")
     (vl6180-write8 VL6180X_REG_INT_CONFIG (logior (logand (vl6180-read8 VL6180X_REG_INT_CONFIG) (lognot #x38)) #x20))
     ;; 100 ms integration period
+    (format t "~%Setting integration period~%")
     (vl6180-write8 VL6180X_REG_SYSALS_PERIOD_HI 0)
     (vl6180-write8 VL6180X_REG_SYSALS_PERIOD_LO 100)
     ;; analog gain
-    (when (> gain VL6180X_ALS_GAIN_40)
-      (setq gain VL6180X_ALS_GAIN_40))
-    (vl6180-write8 VL6180X_REG_SYSALS_ANALOGUE_GAIN (logior gain #x40))
+    (format t "~%Settign gain~%")
+    (let ((local-gain gain))
+      (when (> local-gain VL6180X_ALS_GAIN_40)
+        (setq local-gain VL6180X_ALS_GAIN_40))
+      (vl6180-write8 VL6180X_REG_SYSALS_ANALOGUE_GAIN (logior local-gain #x40)))
     ;; start ALS
+    (format t "~%Starting ALS~%")
     (vl6180-write8 VL6180X_REG_RESULT_ALS_VAL #x01)
     ;; Poll until "New Sample Ready threshold event" is set
+    (format t "~%Waiting for new sample~%")
     (loop
       (when (= (logand (ash (vl6180-read8 VL6180X_REG_RESULT_INT_STATUS) -3) #x07) #x04)
         (return)))
     ;; read lux!
+    (format t "~%Reading lux~%")
     (setq lux (float (vl6180-read16 VL6180X_REG_RESULT_ALS_VAL)))
+    (format t "~%Read lux: ~a~%" lux)
     ;; clear interrupt
     (vl6180-write8 VL6180X_REG_INT_CLEAR #x07)
     ;; calibrated count/lux
@@ -288,9 +297,11 @@
 
 
 (defun test-vl6180 ()
+  (format t "~%Testing~%")
   (vl6180-init)
-  (print "Inited")
+  (format t "~%Inited~%")
   (dotimes (i 100)
+
     (let ((range (vl6180-read-range))
           (status (vl6180-read-range-status)))
       (cond ((= status VL6180X_ERROR_NONE)
