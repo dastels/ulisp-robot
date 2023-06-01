@@ -1,4 +1,6 @@
 ("utils.lsp"
  "i2c_scan.lsp"
- "lis3dh.lsp"
- "vl6180.lsp")
+ "vl6180.lsp"
+ "pca9584.lsp"
+ "mpu6050.lsp"
+ "test.lsp")
